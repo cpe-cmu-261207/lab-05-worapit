@@ -1,17 +1,20 @@
 const inputAdd = document.getElementById("input-add-todo");
 const todoCtn = document.getElementById("todo-container");
 
+let Order = true;
+
 inputAdd.onkeyup = (event) => {
   if (event.key !== "Enter") {
     return;
   } else {
     if (inputAdd.value !== "") {
-      addTodo(inputAdd.value, null);
+      addTodo(inputAdd.value, false);
       inputAdd.value = "";
     } else {
       return alert("Todo cannot be empty");
     }
   }
+  saveTodo();
 };
 
 function addTodo(title, completed) {
@@ -39,7 +42,8 @@ function addTodo(title, completed) {
   div.appendChild(doneBtn);
   div.appendChild(deleteBtn);
   //append to todoCtn
-  todoCtn.prepend(div);
+  if (Order === true) todoCtn.prepend(div);
+  else todoCtn.appendChild(div);
 
   //mouse
   div.onmouseover = () => {
@@ -58,31 +62,44 @@ function addTodo(title, completed) {
     } else if (span.style.textDecoration !== "line-through") {
       span.style.textDecoration = "line-through";
     }
+    saveTodo();
   };
 
   deleteBtn.onclick = () => {
     div.remove();
+    saveTodo();
   };
 }
 
 function saveTodo() {
   const data = [];
+  if (todoCtn.childElementCount == 0) {
+    const dataStr = JSON.stringify(data);
+    localStorage.setItem("TodoListData", dataStr);
+    return;
+  }
   for (const todoDiv of todoCtn.children) {
     const todoObj = {};
     todoObj.title = todoDiv.children[0].innerText;
+    todoObj.completed =
+      todoDiv.children[0].style.textDecoration === "line-through";
     data.push(todoObj);
+
+    const dataStr = JSON.stringify(data);
+    localStorage.setItem("TodoListData", dataStr);
   }
-  const dataStr = JSON.stringify(data);
-  localStorage.setItem("TodoListData", dataStr);
+
+  console.log(data);
 }
 
 function loadTodo() {
+  Order = false;
+
   const dataStr = localStorage.getItem("TodoListData");
   const data = JSON.parse(dataStr);
 
   for (const todoObj of data) {
-    addTodo(todoObj.title);
+    addTodo(todoObj.title, todoObj.completed);
   }
 }
-
 loadTodo();
